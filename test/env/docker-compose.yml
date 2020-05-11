@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ../
+      dockerfile: ./env/Dockerfile
+    restart: on-failure
+    env_file:
+      - prod.env
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
+    volumes:
+      - ../env:/app/env
+      - ../main:/app/main
+
+  db:
+    image: postgres:latest
+    restart: on-failure
+    env_file:
+      - prod.env
+    volumes:
+      - /usr/local/var/postgres:/var/lib/postgres/data/pgdata
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    expose:
+      - 8000
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf
+      - ../media/:/media
+      - ../static/:/static
+      - /etc/letsencrypt/:/etc/letsencrypt
+      - ../dist:/app/dist
+    depends_on:
+      - web
+    ports:
+      - 80:80
+      - 443:443
